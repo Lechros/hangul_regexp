@@ -28,19 +28,13 @@ func GetPattern(search string, ignoreSpace bool, fuzzy bool, matchChoseong bool)
 			} else if canBeChoseong(ch) {
 				writeChoseongPattern(&builder, ch)
 			} else {
-				if shouldEscapeRegexCharacter(ch) {
-					builder.WriteRune('\\')
-				}
-				builder.WriteRune(ch)
+				writeEscaped(&builder, ch)
 			}
 		} else {
 			if matchChoseong && canBeChoseong(ch) {
 				writeChoseongPattern(&builder, ch)
 			} else {
-				if shouldEscapeRegexCharacter(ch) {
-					builder.WriteRune('\\')
-				}
-				builder.WriteRune(ch)
+				writeEscaped(&builder, ch)
 			}
 			builder.WriteString(connector)
 		}
@@ -49,13 +43,12 @@ func GetPattern(search string, ignoreSpace bool, fuzzy bool, matchChoseong bool)
 	return builder.String(), nil
 }
 
-func shouldEscapeRegexCharacter(ch rune) bool {
+func writeEscaped(builder *strings.Builder, ch rune) {
 	switch ch {
 	case '.', '^', '$', '*', '+', '?', '(', ')', '[', '{', '\\', '|':
-		return true
-	default:
-		return false
+		builder.WriteRune('\\')
 	}
+	builder.WriteRune(ch)
 }
 
 func writeChoseongPattern(builder *strings.Builder, choseong rune) {
