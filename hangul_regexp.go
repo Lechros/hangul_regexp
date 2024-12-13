@@ -20,6 +20,7 @@ func GetPattern(search string, ignoreSpace bool, fuzzy bool, matchChoseong bool)
 	}
 
 	builder := strings.Builder{}
+	builder.Grow(preCalculateBytes(search, len(connector), matchChoseong))
 
 	for i, ch := range search {
 		if i+utf8.RuneLen(ch) == len(search) {
@@ -41,6 +42,25 @@ func GetPattern(search string, ignoreSpace bool, fuzzy bool, matchChoseong bool)
 	}
 
 	return builder.String(), nil
+}
+
+func preCalculateBytes(str string, connectorLength int, matchChoseong bool) int {
+	if matchChoseong {
+		size := len(str)
+		for _, ch := range str {
+			if 'ㄱ' <= ch && ch <= 'ㅎ' {
+				// Choseong pattern is 17 bytes and choseong character is 3 bytes
+				size += 17 - 3
+			}
+			// Accommodate for connector and possible regex character escape
+			size += connectorLength + 1
+		}
+		// Last hangul pattern is max. 28 bytes
+		size += 28 - 3
+		return size
+	} else {
+		return len(str) + utf8.RuneCountInString(str)*(connectorLength+1) + (28 - 3)
+	}
 }
 
 func writeEscaped(builder *strings.Builder, ch rune) {

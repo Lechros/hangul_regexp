@@ -82,6 +82,18 @@ func BenchmarkGetPattern_아케인셰이드_에너지소드_fuzzy(b *testing.B) 
 	}
 }
 
+func BenchmarkGetPattern_아케인셰이드_에너지소드_fuzzy_matchChoseong(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_, _ = GetPattern("아케인셰이드 에너지소드", false, true, true)
+	}
+}
+
+func BenchmarkGetPattern_ㅇㅋㅇㅅㅇㄷ_ㅇㄴㅈㅅㄷ_fuzzy_matchChoseong(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_, _ = GetPattern("ㅇㅋㅇㅅㅇㄷ ㅇㄴㅈㅅㄷ", false, true, true)
+	}
+}
+
 func BenchmarkLastHangulString_Sprint(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		_ = fmt.Sprint("(?:",
