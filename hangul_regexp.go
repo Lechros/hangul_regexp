@@ -24,9 +24,9 @@ func GetPattern(search string, ignoreSpace bool, fuzzy bool, matchChoseong bool)
 	for i, ch := range search {
 		if i+utf8.RuneLen(ch) == len(search) {
 			if isHangul(ch) {
-				builder.WriteString(getLastHangulPattern(ch, connector))
+				writeLastHangulPattern(&builder, ch, connector)
 			} else if canBeChoseong(ch) {
-				builder.WriteString(getChoseongPattern(ch))
+				writeChoseongPattern(&builder, ch)
 			} else {
 				if shouldEscapeRegexCharacter(ch) {
 					builder.WriteRune('\\')
@@ -35,7 +35,7 @@ func GetPattern(search string, ignoreSpace bool, fuzzy bool, matchChoseong bool)
 			}
 		} else {
 			if matchChoseong && canBeChoseong(ch) {
-				builder.WriteString(getChoseongPattern(ch))
+				writeChoseongPattern(&builder, ch)
 			} else {
 				if shouldEscapeRegexCharacter(ch) {
 					builder.WriteRune('\\')
@@ -58,9 +58,8 @@ func shouldEscapeRegexCharacter(ch rune) bool {
 	}
 }
 
-func getChoseongPattern(choseong rune) string {
+func writeChoseongPattern(builder *strings.Builder, choseong rune) {
 	choOffset := getChoseongOffset(choseong)
-	builder := strings.Builder{}
 	builder.WriteString("(?:")
 	builder.WriteRune(choseong)
 	builder.WriteString("|[")
@@ -68,12 +67,10 @@ func getChoseongPattern(choseong rune) string {
 	builder.WriteRune('-')
 	builder.WriteRune(assemble(choOffset, len(jungseongs)-1, len(jongseongs)-1))
 	builder.WriteString("])")
-	return builder.String()
 }
 
-func getLastHangulPattern(hangul rune, connector string) string {
+func writeLastHangulPattern(builder *strings.Builder, hangul rune, connector string) {
 	choOffset, jungOffset, jongOffset := disassemble(hangul)
-	builder := strings.Builder{}
 	if hasBatchim(hangul) {
 		jongseong := jongseongs[jongOffset]
 		if canBeChoseong(jongseong) {
@@ -82,7 +79,7 @@ func getLastHangulPattern(hangul rune, connector string) string {
 			builder.WriteRune('|')
 			builder.WriteRune(assemble(choOffset, jungOffset, 0))
 			builder.WriteString(connector)
-			builder.WriteString(getChoseongPattern(jongseong))
+			writeChoseongPattern(builder, jongseong)
 			builder.WriteRune(')')
 		} else {
 			firstJong, secondJong := splitJongseong(jongseong)
@@ -91,7 +88,7 @@ func getLastHangulPattern(hangul rune, connector string) string {
 			builder.WriteRune('|')
 			builder.WriteRune(assemble(choOffset, jungOffset, getJongseongOffset(firstJong)))
 			builder.WriteString(connector)
-			builder.WriteString(getChoseongPattern(secondJong))
+			writeChoseongPattern(builder, secondJong)
 			builder.WriteRune(')')
 		}
 	} else {
@@ -103,7 +100,6 @@ func getLastHangulPattern(hangul rune, connector string) string {
 		builder.WriteRune(assemble(choOffset, jungOffset, len(jongseongs)-1))
 		builder.WriteString("])")
 	}
-	return builder.String()
 }
 
 func isHangul(ch rune) bool {
