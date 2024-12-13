@@ -30,6 +30,7 @@ func TestGetPattern(t *testing.T) {
 		{"Last char with batchim", args{"가 안", false, false, false}, "가 (?:안|아(?:ㄴ|[나-닣]))", false},
 		{"Last char with double batchim", args{"가 있", false, false, false}, "가 (?:있|이(?:ㅆ|[싸-앃]))", false},
 		{"Last char with combined batchim", args{"가 얇", false, false, false}, "가 (?:얇|얄(?:ㅂ|[바-빟]))", false},
+		{"Last char is combined choseong", args{"ㄻ", false, false, false}, "ㄻ", false},
 
 		{"Mixed / ignoreSpace=true", args{"ㅁ가a항1", true, false, false}, "ㅁ *?가 *?a *?항 *?1", false},
 		{"Last char with batchim / ignoreSpace=true / has space matcher between", args{"가 안", true, false, false}, "가 *?  *?(?:안|아 *?(?:ㄴ|[나-닣]))", false},
@@ -41,6 +42,7 @@ func TestGetPattern(t *testing.T) {
 		{"Non-last char is choseong / choseong=true", args{"ㄱ1", false, false, true}, "(?:ㄱ|[가-깋])1", false},
 		{"Multiple choseong chars / choseong=true", args{"ㄱ ㄴㄷ", false, false, true}, "(?:ㄱ|[가-깋]) (?:ㄴ|[나-닣])(?:ㄷ|[다-딯])", false},
 		{"Mixed with choseong / choseong=true", args{"aㅎ1가ㄴ", false, false, true}, "a(?:ㅎ|[하-힣])1가(?:ㄴ|[나-닣])", false},
+		{"Standalone batchim char / choseong=true", args{"ㄻㅄ", false, false, true}, "(?:ㄹ|[라-맇])(?:ㅁ|[마-밓])(?:ㅂ|[바-빟])(?:ㅅ|[사-싷])", false},
 
 		{"Any / ignoreSpace=true, fuzzy=true / err", args{"", true, true, false}, "", true},
 	}

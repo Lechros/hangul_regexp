@@ -28,12 +28,18 @@ func GetPattern(search string, ignoreSpace bool, fuzzy bool, matchChoseong bool)
 				writeLastHangulPattern(&builder, ch, connector)
 			} else if canBeChoseong(ch) {
 				writeChoseongPattern(&builder, ch)
+			} else if matchChoseong && canBeChoseongOrJongseong(ch) {
+				writeCombinedChoseongPattern(&builder, ch)
 			} else {
 				writeEscaped(&builder, ch)
 			}
 		} else {
-			if matchChoseong && canBeChoseong(ch) {
-				writeChoseongPattern(&builder, ch)
+			if matchChoseong && canBeChoseongOrJongseong(ch) {
+				if canBeChoseong(ch) {
+					writeChoseongPattern(&builder, ch)
+				} else {
+					writeCombinedChoseongPattern(&builder, ch)
+				}
 			} else {
 				writeEscaped(&builder, ch)
 			}
@@ -82,6 +88,12 @@ func writeChoseongPattern(builder *strings.Builder, choseong rune) {
 	builder.WriteString("])")
 }
 
+func writeCombinedChoseongPattern(builder *strings.Builder, jongseong rune) {
+	firstCho, secondCho := splitJongseong(jongseong)
+	writeChoseongPattern(builder, firstCho)
+	writeChoseongPattern(builder, secondCho)
+}
+
 func writeLastHangulPattern(builder *strings.Builder, hangul rune, connector string) {
 	choOffset, jungOffset, jongOffset := disassemble(hangul)
 	if hasBatchim(hangul) {
@@ -119,11 +131,12 @@ func isHangul(ch rune) bool {
 	return '가' <= ch && ch <= '힣'
 }
 
+func canBeChoseongOrJongseong(ch rune) bool {
+	return 'ㄱ' <= ch && ch <= 'ㅎ'
+}
+
 func canBeChoseong(ch rune) bool {
-	if 'ㄱ' <= ch && ch <= 'ㅎ' {
-		return getChoseongOffset(ch) >= 0
-	}
-	return false
+	return getChoseongOffset(ch) >= 0
 }
 
 func hasBatchim(hangul rune) bool {
