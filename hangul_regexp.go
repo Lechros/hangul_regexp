@@ -2,7 +2,6 @@ package hangul_regexp
 
 import (
 	"errors"
-	"slices"
 	"strings"
 	"unicode/utf8"
 )
@@ -35,7 +34,7 @@ func GetPattern(search string, ignoreSpace bool, fuzzy bool, matchChoseong bool)
 				builder.WriteRune(ch)
 			}
 		} else {
-			if canBeChoseong(ch) && matchChoseong {
+			if matchChoseong && canBeChoseong(ch) {
 				builder.WriteString(getChoseongPattern(ch))
 			} else {
 				if shouldEscapeRegexCharacter(ch) {
@@ -51,24 +50,12 @@ func GetPattern(search string, ignoreSpace bool, fuzzy bool, matchChoseong bool)
 }
 
 func shouldEscapeRegexCharacter(ch rune) bool {
-	chars := [...]rune{'.', '^', '$', '*', '+', '?', '(', ')', '[', '{', '\\', '['}
-	return slices.Contains(chars[:], ch)
-}
-
-func isHangul(ch rune) bool {
-	return '가' <= ch && ch <= '힣'
-}
-
-func canBeChoseong(ch rune) bool {
-	if 'ㄱ' <= ch && ch <= 'ㅎ' {
-		_, found := slices.BinarySearch(choseongs[:], ch)
-		return found
+	switch ch {
+	case '.', '^', '$', '*', '+', '?', '(', ')', '[', '{', '\\', '|':
+		return true
+	default:
+		return false
 	}
-	return false
-}
-
-func hasBatchim(hangul rune) bool {
-	return (hangul-'가')%28 > 0
 }
 
 func getChoseongPattern(choseong rune) string {
@@ -119,14 +106,19 @@ func getLastHangulPattern(hangul rune, connector string) string {
 	return builder.String()
 }
 
-func getChoseongOffset(choseong rune) int {
-	index, _ := slices.BinarySearch(choseongs[:], choseong)
-	return index
+func isHangul(ch rune) bool {
+	return '가' <= ch && ch <= '힣'
 }
 
-func getJongseongOffset(jongseong rune) int {
-	index, _ := slices.BinarySearch(jongseongs[:], jongseong)
-	return index
+func canBeChoseong(ch rune) bool {
+	if 'ㄱ' <= ch && ch <= 'ㅎ' {
+		return getChoseongOffset(ch) >= 0
+	}
+	return false
+}
+
+func hasBatchim(hangul rune) bool {
+	return (hangul-'가')%28 > 0
 }
 
 func disassemble(hangul rune) (int, int, int) {
@@ -136,6 +128,114 @@ func disassemble(hangul rune) (int, int, int) {
 
 func assemble(choOffset, jungOffset, jongOffset int) rune {
 	return rune('가' + (choOffset*21+jungOffset)*28 + jongOffset)
+}
+
+func getChoseongOffset(choseong rune) int {
+	switch choseong {
+	case 'ㄱ':
+		return 0
+	case 'ㄲ':
+		return 1
+	case 'ㄴ':
+		return 2
+	case 'ㄷ':
+		return 3
+	case 'ㄸ':
+		return 4
+	case 'ㄹ':
+		return 5
+	case 'ㅁ':
+		return 6
+	case 'ㅂ':
+		return 7
+	case 'ㅃ':
+		return 8
+	case 'ㅅ':
+		return 9
+	case 'ㅆ':
+		return 10
+	case 'ㅇ':
+		return 11
+	case 'ㅈ':
+		return 12
+	case 'ㅉ':
+		return 13
+	case 'ㅊ':
+		return 14
+	case 'ㅋ':
+		return 15
+	case 'ㅌ':
+		return 16
+	case 'ㅍ':
+		return 17
+	case 'ㅎ':
+		return 18
+	default:
+		return -1
+	}
+}
+
+func getJongseongOffset(jongseong rune) int {
+	switch jongseong {
+	case -1:
+		return 0
+	case 'ㄱ':
+		return 1
+	case 'ㄲ':
+		return 2
+	case 'ㄳ':
+		return 3
+	case 'ㄴ':
+		return 4
+	case 'ㄵ':
+		return 5
+	case 'ㄶ':
+		return 6
+	case 'ㄷ':
+		return 7
+	case 'ㄹ':
+		return 8
+	case 'ㄺ':
+		return 9
+	case 'ㄻ':
+		return 10
+	case 'ㄼ':
+		return 11
+	case 'ㄽ':
+		return 12
+	case 'ㄾ':
+		return 13
+	case 'ㄿ':
+		return 14
+	case 'ㅀ':
+		return 15
+	case 'ㅁ':
+		return 16
+	case 'ㅂ':
+		return 17
+	case 'ㅄ':
+		return 18
+	case 'ㅅ':
+		return 19
+	case 'ㅆ':
+		return 20
+	case 'ㅇ':
+		return 21
+	case 'ㅈ':
+		return 22
+	case 'ㅊ':
+		return 23
+	case 'ㅋ':
+		return 24
+	case 'ㅌ':
+		return 25
+	case 'ㅍ':
+		return 26
+	case 'ㅎ':
+		return 27
+	default:
+		return -1
+	}
 }
 
 func splitJongseong(jongseong rune) (rune, rune) {
